@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset = "UTF-8">
+    <title>Calendar App | Events</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Chelsea+Market|Roboto">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+    <script src="/vueobjects/events.js" defer></script>
+</head>
+
+<body>
+    <!-- Header contains Logo, Navigation Bar with tabs: Event (Users) Account-->
+    <header>
+        <div id="logo">Calendar App</div>
+        <div id="navigation">
+            <div class="max-content-width">
+                <ul>
+                    <li class="active"><a href="/user/events">Events</a></li>
+                    <li class="float-right"><a href="/user/account">Account</a></li>
+                  </ul>
+            </div>
+        </div>
+    </header>
+
+    <main id="vue_events" style="text-align:center">
+        <div class="text-align-right">
+            <div class="nav-button">
+                <a href="/user/create_event" class="float-right">Create Event</a>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 0px;">Event Plans</h2>
+        <hr>
+
+        <div class="plans-grid">
+            <div class="event-row">
+
+                <div class="event-card flex-thirds" v-for="plan in plan_data" v-on:click="onClickPlanCard(plan.id)">
+                    <h4 class="event-title">{{plan.name}}</h4>
+                    <p>{{plan.organiser}}</p>
+                    <p>{{plan.date}}</p>
+                    <p>{{plan.time}}</p>
+                </div>
+
+            </div>
+        </div>
+
+        <span style="padding:50dp"></span>
+        <h2>Finalised Events</h2>
+        <hr>
+
+        <div class="events-grid">
+            <div class="event-row">
+
+                <div class="event-card flex-thirds" v-for="event in event_data" v-on:click="onClickEventCard(event.id)">
+                    <h4 class="event-title">{{event.name}}</h4>
+                    <p>{{event.organiser}}</p>
+                    <p>{{event.date}}</p>
+                    <p>{{event.time}}</p>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <footer></footer>
+
+</body>
+
+</html>
