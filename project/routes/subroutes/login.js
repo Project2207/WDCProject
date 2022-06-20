@@ -10,7 +10,7 @@ router.use('/login', function(req,res,next)
 	console.log("1: check if logged in");
 	if(req.session.user)
 	{
-		console.log(req.session.user);
+		console.log("userID: " + req.session.user);
 		console.log("1: already logged in");
 		res.sendStatus(200);
 		return;
@@ -37,6 +37,7 @@ router.use('/login', function(req,res, next)
 
 		//set up query
 		var query = quick.selectUser('e');
+		console.log(req.body.email);
 
 		//run request
 		connection.query(query, [req.body.email], function(error, rows, fields) {
@@ -58,7 +59,8 @@ router.use('/login', function(req,res, next)
 			}
 			else if (!rows[0]) {
 				console.log("2: table is weird");
-				
+				console.log(rows);
+
 				res.sendStatus(401);
 				return;
 			}
@@ -132,6 +134,7 @@ router.use('/login', function(req,res,next)
 		else
 		{
 			req.session.user = userID;
+			console.log("userID: " + req.session.user);
 			req.session.access = access;
 			next();
 		}

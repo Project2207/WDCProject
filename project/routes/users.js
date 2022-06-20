@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var nodemailer = require('nodemailer');
+var quick = require('../define/queryStrings'); //for quick query string generation
+
 
 // https://ethereal.email/messages
 //
@@ -22,6 +24,205 @@ var nodemailer = require('nodemailer');
 /* GET users listing. */
 router.get('/', function(req, res, next) {
   res.send('respond with a resource');
+});
+
+/* GET userID */
+router.get('/getUserID', function(req, res, next) {
+  res.json({userID: req.session.user});
+});
+
+/* Plan updated */
+router.post('/eventupdated', function(req, res) {
+  	//FIRST STEP - set up connection!
+	  let pool = req.pool;
+	  pool.getConnection(function(error, connection) {
+		  if (error){
+			  res.send(500);
+			  return;
+		  }
+
+		  //get user details
+		  var name = req.body.name;
+		  var description = req.body.description;
+      var eventId = req.body.eventID;
+
+      console.log("description in route: " + description);
+
+		  //create query
+      // Using escapes to sanitise input
+		  let query = quick.updatePlanDetails(eventId, name, description);
+      console.log(query);
+
+		  connection.query(query, function(error, rows, fields)
+		  {
+			  connection.release();
+			  if(error)
+			  {
+          console.log(error);
+				  res.sendStatus(500);
+				  return;
+			  } else {
+          res.sendStatus(200);
+        }
+		  });
+	  });
+});
+
+/* Address updated */
+router.post('/addressupdated', function(req, res) {
+  //FIRST STEP - set up connection!
+  let pool = req.pool;
+  pool.getConnection(function(error, connection) {
+    if (error){
+      res.send(500);
+      return;
+    }
+
+    //get address details
+    var addressID = req.body.addressID;
+    var street = req.body.street;
+    var streetAdd = req.body.streetAdd;
+    var suburb = req.body.suburb;
+    var state = req.body.state;
+    var postcode = req.body.postcode;
+    var country = req.body.country;
+
+    //create query
+    let query = "UPDATE addresses " +
+                "SET street = ?, streetAdd = ?, suburb = ?, postcode = ?, state = ?, country = ? " +
+                "WHERE addressID = ?;";
+
+    connection.query(query, [street,streetAdd,suburb,postcode,state,country,addressID], function(error, rows, fields)
+    {
+      connection.release();
+      if(error)
+      {
+        console.log(error);
+        res.sendStatus(500);
+        return;
+      } else {
+        res.sendStatus(200);
+      }
+    });
+  });
+});
+
+/* Remove Invitee */
+router.post('/removeinvitees', function(req, res) {
+  //FIRST STEP - set up connection!
+
+  //get invitee details
+  var eventID = req.body.eventID;
+  var emails = req.body.delete_invitations;
+  //create query
+  let query = "DELETE invitations FROM invitations " +
+              "INNER JOIN users ON invitations.guestID = users.userID " +
+              "WHERE (eventID = ?) AND (email = ?);";
+
+  for (let i = 0; i < emails.length; i++) {
+    //console.log("Inside Invitation Loop");
+    //connect to single connection
+    req.pool.getConnection(function(error, connection) {
+    if (error) {
+      console.log("1: connection error");
+      console.log(error);
+      res.sendStatus(500);
+      return;
+    }
+
+    //run request
+    connection.query(query, [eventID,emails[i]] , function(error, rows, fields) {
+      connection.release();
+      if (error) {
+        console.log("1: query  error");
+        console.log(error);
+        res.sendStatus(500);
+      }
+    })
+  })
+  }
+  res.sendStatus(200);
+});
+
+router.post('/finaliseevent', function(req, res) {
+    	//FIRST STEP - set up connection!
+	  let pool = req.pool;
+	  pool.getConnection(function(error, connection) {
+		  if (error){
+			  res.send(500);
+			  return;
+		  }
+
+		  //get event details
+      var eventID = req.body.eventID;
+		  var name = req.body.name;
+		  var description = req.body.description;
+      var start = req.body.start;
+      var end = req.body.end;
+
+      console.log("eventID: " + eventID);
+      console.log("name: " + name);
+      console.log("description: " + description);
+      console.log("start: " + start);
+      console.log("end: " + end);
+
+		  //create query
+		  let query = "UPDATE events " +
+                  "SET name = ?, description = ?, start = ?, end = ?, status = 'event' " +
+                  "WHERE eventID = ?;";
+
+      console.log(query);
+
+		  connection.query(query, [name,description,start,end,eventID], function(error, rows, fields)
+		  {
+			  connection.release();
+			  if(error)
+			  {
+          console.log(error);
+				  res.sendStatus(500);
+				  return;
+			  } else {
+          res.sendStatus(200);
+        }
+		  });
+	  });
+});
+
+router.post('/finaliseEventDeleteActions', function(req, res) {
+  //FIRST STEP - set up connection!
+let pool = req.pool;
+pool.getConnection(function(error, connection) {
+  if (error){
+    res.send(500);
+    return;
+  }
+
+  //get event details
+  var eventID = req.body.eventID;
+
+  console.log("eventID: " + eventID);
+
+  //create query
+  let query = "DELETE times, availablity " +
+              "FROM times " +
+              "INNER JOIN availablity ON times.timeID = availablity.timeID " +
+              "WHERE eventID = ?;";
+
+  console.log(query);
+
+  connection.query(query, [eventID], function(error, rows, fields)
+  {
+    connection.release();
+    if(error)
+    {
+      console.log(error);
+      res.sendStatus(500);
+      return;
+    } else {
+      res.sendStatus(200);
+    }
+  });
+});
 });
 
 /* Email Notifications */
@@ -83,6 +284,7 @@ router.post('/emailresponded', function(req,res){
 
 
 function emailCreated(invitees, organiser, name, descr, dates, times) {
+  console.log('here');
   var mailOptions = {
     from: 'Calendar App <calendarappevents@gmail.com>',
     to: invitees, // To Invitees with selected notification

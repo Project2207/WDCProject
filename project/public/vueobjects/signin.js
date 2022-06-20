@@ -17,14 +17,18 @@ function login(details) {
             alert("Login Unsuccessful");
             return false;
         }
-    };
+    }
 }
 
 var signin = new Vue({
     el: '#vue_signin',
     data: {
         email: "",
-        password: ""
+        password: "",
+
+        // Validation messages
+        email_message: "",
+        password_message: "",
     },
 
     methods: {
@@ -35,7 +39,16 @@ var signin = new Vue({
         //     console.log('Image URL: ' + profile.getImageUrl());
         //     console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
         //   }
-
+        validateEmail: function() {
+            if (this.email.length > 64) {
+                this.email = this.email.slice(0, 64);
+            }
+        },
+        validatePassword: function() {
+            if (this.password.length > 128) {
+                this.password = this.password.slice(0, 128);
+            }
+        },
         onClickUserSignIn: function() {
             console.log("signin");
             //sign in stuff here

@@ -116,22 +116,65 @@ tr {
   height: 60px;
 }
 
+/* Reference: https://www.w3schools.com/howto/howto_css_switch.asp */
+.box {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.box input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--darkpurple);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--darkpurple);
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
 /* ------------------------ classes ------------------------ */
+
 .max-content-width{
   max-width: 1040px;
   margin: auto;
-}
-
-.labelled-text-entry {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  padding: 10px;
-}
-
-.labelled-text-entry-label {
-  padding: 10px;
 }
 
 .labelled-text-view {
@@ -139,12 +182,31 @@ tr {
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  padding-bottom: 10px;
+  padding:20px;
 }
 
 .labelled-text-view-label {
   font-weight: bold;
+  width: 200px;
   padding-right: 10px;
+}
+
+.labelled-text-view-text {
+  width: 500px;
+}
+
+.address-top {
+  padding-top: 20px;
+  padding-bottom: 3px;
+}
+
+.address {
+  padding: 3px;
+}
+
+.address-bottom {
+  padding-top: 3px;
+  padding-bottom: 20px;
 }
 
 .active {
@@ -169,6 +231,11 @@ tr {
 
 .text-align-center{
   text-align: center;
+}
+
+.red {
+  font-size: 0.8em;
+  color: var(--darkred);
 }
 
 .red-background {
@@ -229,7 +296,6 @@ tr {
 
 .event-card {
   text-align: center;
-  background-color: #E1E1FF;
   padding: 20px;
   margin: 20px;
   border-radius: 10px;
@@ -245,6 +311,16 @@ tr {
   color: black;
 }
 
+.attendee {
+  background-color: var(--lightpurple);
+}
+
+.organiser {
+  background-color: var(--lightblue);
+}
+
+
+
 table {
   text-align: center
 }
@@ -254,9 +330,18 @@ table {
 }
 
 
-/* Login / Signup */
+/* Login / Signup / Input */
+.labelled-text-entry {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
 .labelled-text-entry-label {
   width: 200px;
+  padding: 10px;
 }
 
 .labelled-text-entry-input {
@@ -294,7 +379,7 @@ table {
 
 .time-table {
   width: 90%;
-  float: left;
+  /* float: left; */
 }
 
 .time-time {
@@ -350,6 +435,9 @@ table {
   text-align: right
 }
 
+.hidden-until-click-show {
+  display: none;
+}
 
 /* ------------------------ ids ------------------------ */
 #logo {

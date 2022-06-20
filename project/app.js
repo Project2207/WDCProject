@@ -4,6 +4,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
 
+// var {body, }
+
 //routers
 
 var indexRouter = require('./routes/index');
@@ -39,7 +41,7 @@ app.use(session({
 // app.use(VueGapi, {
 //   apiKey: 'AIzaSyCqNAgFjHCBahcJx5qs6TnlkxOMtIjdLFc',
 //   clientId: '627269652978-d02jdtbae1mpqgr3dbr1k2rlqo63tnsv.apps.googleusercontent.com',
-https://project2207-code50-104963485-4j9pp75pg3v96-3000.githubpreview.dev// })
+//https://project2207-code50-104963485-4j9pp75pg3v96-3000.githubpreview.dev// })
 
 
 //modules outside of express

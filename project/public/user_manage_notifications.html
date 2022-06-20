@@ -34,19 +34,28 @@
         <div class="flex-container" style="max-width: 900px; margin: auto;">
             <div class="flex-threequarters">Receive email notifications when invitees respond to an event you have planned.</div>
             <div class="flex-quarter text-align-right">
-                <input type="checkbox" id="responded" class="checkbox" v-model="responded">
+                <span class="box">
+                    <input type="checkbox" id="responded" class="checkbox" v-model="responded">
+                    <span class="slider"></span>
+                </span>
             </div>
         </div>
         <div class="flex-container" style="max-width: 900px; margin: auto;">
             <div class="flex-threequarters">Receive an email notification when an event you have been invited to has been finalised.</div>
             <div class="flex-quarter text-align-right">
-                <input type="checkbox" id="finalised" class="checkbox" v-model="finalised">
+                <span class="box">
+                    <input type="checkbox" id="finalised" class="checkbox" v-model="finalised">
+                    <span class="slider"></span>
+                </span>
             </div>
         </div>
         <div class="flex-container" style="max-width: 900px; margin: auto;">
             <div class="flex-threequarters">Receive an email when an event you are attending has been cancelled</div>
             <div class="flex-quarter text-align-right">
-                <input type="checkbox" id="cancelled" class="checkbox" v-model="cancelled">
+                <span class='box'>
+                    <input type="checkbox" id="cancelled" class="checkbox" v-model="cancelled">
+                    <span class="slider"></span>
+                </span>
             </div>
         </div>
         <div class="text-align-right">

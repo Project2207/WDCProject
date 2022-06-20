@@ -333,3 +333,197 @@
 // 	}
 
 // })
+
+// //6--CREATE AVAILABLITY
+// router.post('/event/addAvails', function(req, res, next) {
+// 	//connect to single connection
+
+// 	req.pool.getConnection(function(error, connection) {
+// 		if (error) {
+// 			console.log("connection error");
+// 			console.log(error);
+// 			res.sendStatus(500);
+// 			return;
+// 		}
+
+// 		//set up query
+// 		//var query = quick.insertJoin("invitations", "invitationID", "times", "timeID", "availablity", "eventID");
+// 		var query = quick.insertJoin("invitations", "invitationID", "times", "timeID", "availablity", "eventID");
+// //		var query = "INSERT INTO availablity (timeID, invitationID) " +
+// //			"SELECT timeID,invitationID FROM times INNER JOIN invitations ON times.eventID = invitations.eventID " +
+// //			"WHERE times.eventID = " + req.session.eventID + " AND guestID = " + userID + ";";
+
+// 		//run request
+// 		connection.query(query, req.body.eventID, function(error, rows, fields) {
+// 			connection.release();
+// 			if (error) {
+// 				console.log("query error");
+// 				console.log(error);
+// 				res.sendStatus(500);
+// 			} else {
+// 				{
+// 					console.log("success");
+// 					//go to next middleware
+// 					res.redirect('/user/events/');
+// 					res.sendStatus(200);
+// 				}
+// 			}
+// 		})
+// 	})
+
+// })
+
+
+// //5--- get userIDs to invite
+// router.get('/event/addInvitations', function(req, res, next) {
+// 	//connect to single connection
+// 	console.log("addInvitations");
+
+// 	let userIDs = req.session.userIDs;
+// 	console.log("userIDs: " + userIDs[0]);
+// 	//set up query
+// 	var query = "INSERT INTO invitations (eventID, guestID) VALUES (?,?);";
+
+// 	for (let i = 0; i < userIDs.length; i++) {
+// 		req.pool.getConnection(function(error, connection) {
+// 			if (error) {
+// 				console.log("2: connection error");
+// 				res.sendStatus(500);
+// 				return;
+// 			}
+// 			//run request
+// 			connection.query(query, [req.session.eventID,userIDs[i]], function(error, rows, fields) {
+// 				connection.release();
+// 				if (error) {
+// 					console.log("2: query error");
+// 					res.sendStatus(500);
+// 				} else {
+// 					{
+// 						console.log("2: successful");
+// 						//go to next middleware
+// 					}
+// 				}
+// 			})
+// 		})
+// 	}
+// 	res.sendStatus(200);
+// })
+
+
+// //6--CREATE AVAILABLITY
+// router.get('/event/addAvails', function(req, res, next) {
+// 	//connect to single connection
+// 	req.pool.getConnection(function(error, connection) {
+// 		if (error) {
+// 			console.log("connection error");
+// 			console.log(error);
+// 			res.sendStatus(500);
+// 			return;
+// 		}
+// 		//set up query
+// 		//var query = quick.insertSelectInner("invitations", "invitationID", "times", "timeID", "availablity", "eventID");
+// 		var query = "INSERT INTO availablity (timeID, invitationID) " +
+// 			"SELECT timeID,invitationID FROM times INNER JOIN invitations ON times.eventID = invitations.eventID " +
+// 			"WHERE times.eventID = " + req.session.eventID + ";";
+
+// 		//run request
+// 		connection.query(query, function(error, rows, fields) {
+// 			connection.release();
+// 			if (error) {
+// 				console.log("query error");
+// 				console.log(error);
+// 				res.sendStatus(500);
+// 			} else {
+// 				{
+// 					console.log("success");
+// 					//go to next middleware
+// 					location.assign('/user/events/');
+// 					res.sendStatus(200);
+// 				}
+// 			}
+// 		})
+// 	})
+
+// })
+
+// //5---PAIR UP USERIDS WITH THE EVENTID
+// router.use('/event/addInvitations', function(req,res,next)
+// {
+// 	console.log("3: PAIR UP USERIDS WITH THE EVENTID");
+// 	try
+// 	{
+// 		req.session.invitePairs = misc.pairs(req.session.inviteID, req.session.eventID);
+// 	} catch(error)
+// 	{
+// 		console.log("3: PAIR ERROR??");
+// 		res.sendStatus(500);
+// 		return;
+// 	}
+// 	next();
+// })
+
+// //5---CREATE INVITATIONS FROM PAIRS, RETURN WITH EVENTID
+// router.use('/event/addInvitations', function(req, res, next) {
+// 	console.log("4: actually create the invitations now LMAO");
+// 	//connect to single connection
+// 	req.pool.getConnection(function(error, connection) {
+// 		if (error) {
+// 			console.log("4: connection error");
+// 			console.log(error);
+// 			res.sendStatus(500);
+// 			return;
+// 		}
+// 		//set up query
+// 		var query = quick.insert("invitations", "(eventID, userID)", '?');
+
+// 		//run request
+// 		connection.query(query, req.session.invitePairs, function(error, rows, fields) {
+// 			connection.release();
+// 			if (error) {
+// 				console.log("4: query error" );
+// 				console.log(error);
+// 				res.sendStatus(500);
+// 			} else {
+// 				{
+// 					res.redirect(307,'/event/addAvails');
+// 				}
+// 			}
+// 		})
+// 	})
+
+// })
+
+// //5--- get userIDs to invite
+// router.post('/event/addInvitation', function(req, res, next) {
+// 	//connect to single connection
+// 	console.log("addInvitation");
+
+// 	req.pool.getConnection(function(error, connection) {
+// 		if (error) {
+// 			console.log("addI: connection error");
+// 			res.sendStatus(500);
+// 			return;
+// 		}
+// 		let eventID = req.session.eventID // req.session.eventID set in /event/addTimes will return NULL if not
+// 		let guestID = req.session.guestID; // working correctly
+// 		console.log("userIDs: " + req.session.guestID);
+// 		//set up query
+// 		var query = "INSERT INTO invitations (eventID, guestID) VALUES (?,?);";
+
+// 		//run request
+// 		connection.query(query, [eventID,guestID], function(error, rows, fields) {
+// 			connection.release();
+// 			if (error) {
+// 				console.log("add: query error");
+// 				res.sendStatus(500);
+// 			} else {
+// 				{
+// 					console.log("add: successful");
+// 					//go to next middleware
+// 					res.json({userID: guestID});
+// 					//res.sendStatus(200);
+// 				}
+// 			}
+// 		})
+// 	})
+// })

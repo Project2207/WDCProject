@@ -5,47 +5,6 @@ var mysql = require('mysql');
 var quick = require('../../define/queryStrings');
 var misc = require('../../define/misc');
 
-/*
-//CONNECTION FORMAT
-router.post('/event/checkIfAddressExists', function(req, res, next) {
-	//connect to single connection
-	req.pool.getConnection(function(error, connection) {
-		if (error) {
-			console.log("connection error");
-			console.log(error);
-			res.sendStatus(500);
-			return;
-		}
-		//set up query
-			let street = req.body.street;
-			let streetAdd = req.body.streetAdd;
-			let suburb = req.body.suburb;
-			let postcode = req.body.postcode;
-			let state = req.body.state;
-			let country = req.body.country;
-
-
-		//run request
-		connection.query(query, [parameter], function(error, rows, fields) {
-			connection.release();
-			if (error) {
-				console.log("query error");
-				console.log(error);
-				res.sendStatus(500);
-			} else {
-				{
-					console.log("success");
-					//go to next middleware
-					next();
-
-				}
-			}
-		})
-	})
-
-*/
-
-
 //1---check if the address (i.e. actual physical location)
 //----is in database
 //----return addressID from the database if there
@@ -108,7 +67,7 @@ router.post('/event/getAddress', function(req, res,next) {
 			{
 				//console.log("1: GET: there's something");
 				req.session.addressID = rows[0].addressID;
-				console.log(req.session.addressID);
+				console.log("req.session.addressID: " + req.session.addressID);
 				res.json(req.session.addressID);
 			}
 		});
@@ -177,7 +136,7 @@ router.post('/event/createPlan', function(req, res, next) {
 		  //create query
 //		  all: "(creatorID, addressID, status, description, name, start, end)", //3 ->6
 
-		  let query = quick.insertEvent('A'); // not finished check QueryStrings.js
+		  let query = quick.insertEvent('A');
 
 		  //get plan details
 		  let creatorID = req.session.user;
@@ -212,7 +171,7 @@ router.post('/event/createPlan', function(req, res, next) {
 					else
 					{
 						req.session.eventID = rows[0].eventID;
-						console.log(req.session.eventID);
+						console.log("req.session.eventID: " + req.session.eventID);
 						res.json({eventID: rows[0]});
 					}
 				});
@@ -245,11 +204,12 @@ router.post('/event/addTimes', function(req, res, next) {
 	let times = [];
 	let day = 1000 * 60 * 60 * 24;
     // Number of days
-    let days = ((end.getTime() - start.getTime())/ day);
+    let days = Math.ceil((end.getTime() - start.getTime())/ day);
     // Number of half-hour time_slots
     let time_slots = ((end.getHours()+end.getMinutes()/60)-(start.getHours()+start.getMinutes()/60))*2;
 
 	let running_time = new Date();
+	running_time.setFullYear(start.getFullYear(),start.getMonth(),start.getDate());
 	let first_hour = start.getHours();
 	let first_minute = start.getMinutes();
 
@@ -259,6 +219,7 @@ router.post('/event/addTimes', function(req, res, next) {
 		//Start time of each day
 		running_time.setHours(first_hour);
 		running_time.setMinutes(first_minute);
+		running_time.setSeconds(0);
 
 		for (let j = 0; j < time_slots; j++) {
 			//console.log("Inside Loop ");
@@ -297,19 +258,17 @@ router.post('/event/addTimes', function(req, res, next) {
 			})
 		})
 	}
-	res.sendStatus(200);
+	res.json({eventID: req.session.eventID});
+	//res.sendStatus(200);
 });
-
-
-
-
 
 //5---create invitations
 //5---create guest accounts for emails NOT in database already
 router.use('/event/addGuestEmails', function(req, res, next) {
-	//console.log("create invitations start!");
+	console.log("create invitations start!");
 	//console.log("1: check if emails are in database");
 
+	req.session.eventID = req.body.eventID;
 	let emails = req.body.invitees;
 
 	//set up query
@@ -350,7 +309,7 @@ router.use('/event/addGuestEmails', function(req, res, next) {
 //5--- get userIDs to invite
 router.use('/event/getUserID', function(req, res, next) {
 	//connect to single connection
-	//console.log("2: get userID from emails");
+	console.log("2: get userID from emails");
 
 	//set up query
 	//var query = selectUser('e', "userID");
@@ -383,45 +342,10 @@ router.use('/event/getUserID', function(req, res, next) {
 	})
 })
 
-// //5--- get userIDs to invite
-// router.post('/event/addInvitation', function(req, res, next) {
-// 	//connect to single connection
-// 	console.log("addInvitation");
-
-// 	req.pool.getConnection(function(error, connection) {
-// 		if (error) {
-// 			console.log("addI: connection error");
-// 			res.sendStatus(500);
-// 			return;
-// 		}
-// 		let eventID = req.session.eventID // req.session.eventID set in /event/addTimes will return NULL if not
-// 		let guestID = req.session.guestID; // working correctly
-// 		console.log("userIDs: " + req.session.guestID);
-// 		//set up query
-// 		var query = "INSERT INTO invitations (eventID, guestID) VALUES (?,?);";
-
-// 		//run request
-// 		connection.query(query, [eventID,guestID], function(error, rows, fields) {
-// 			connection.release();
-// 			if (error) {
-// 				console.log("add: query error");
-// 				res.sendStatus(500);
-// 			} else {
-// 				{
-// 					console.log("add: successful");
-// 					//go to next middleware
-// 					res.json({userID: guestID});
-// 					//res.sendStatus(200);
-// 				}
-// 			}
-// 		})
-// 	})
-// })
-
 //5--- add invitations and availabilities for each invitee
 router.use('/event/getUserID', function(req, res, next) {
 	//connect to single connection
-	//console.log("addInvitation");
+	console.log("addInvitation");
 
 	// Add invitation
 	req.pool.getConnection(function(error, connection) {
@@ -430,7 +354,7 @@ router.use('/event/getUserID', function(req, res, next) {
 			res.sendStatus(500);
 			return;
 		}
-		let eventID = req.session.eventID // req.session.eventID set in /event/addTimes will return NULL if not
+		let eventID = req.session.eventID; // req.session.eventID set in /event/addTimes will return NULL if not
 		let guestID = req.session.guestID; // working correctly
 		//console.log("invite userID: " + guestID);
 		//set up query
@@ -459,7 +383,7 @@ router.use('/event/getUserID', function(req, res, next) {
 router.use('/event/getUserID', function(req, res, next) {
 	//connect to single connection
 	// Add availability
-	//console.log("addAvails");
+	console.log("addAvails");
 	req.pool.getConnection(function(error, connection) {
 		if (error) {
 			console.log("addI: connection error");
@@ -492,165 +416,5 @@ router.use('/event/getUserID', function(req, res, next) {
 	})
 })
 
-
-
-// //6--CREATE AVAILABLITY
-// router.post('/event/addAvails', function(req, res, next) {
-// 	//connect to single connection
-
-// 	req.pool.getConnection(function(error, connection) {
-// 		if (error) {
-// 			console.log("connection error");
-// 			console.log(error);
-// 			res.sendStatus(500);
-// 			return;
-// 		}
-
-// 		//set up query
-// 		//var query = quick.insertJoin("invitations", "invitationID", "times", "timeID", "availablity", "eventID");
-// 		var query = quick.insertJoin("invitations", "invitationID", "times", "timeID", "availablity", "eventID");
-// //		var query = "INSERT INTO availablity (timeID, invitationID) " +
-// //			"SELECT timeID,invitationID FROM times INNER JOIN invitations ON times.eventID = invitations.eventID " +
-// //			"WHERE times.eventID = " + req.session.eventID + " AND guestID = " + userID + ";";
-
-// 		//run request
-// 		connection.query(query, req.body.eventID, function(error, rows, fields) {
-// 			connection.release();
-// 			if (error) {
-// 				console.log("query error");
-// 				console.log(error);
-// 				res.sendStatus(500);
-// 			} else {
-// 				{
-// 					console.log("success");
-// 					//go to next middleware
-// 					res.redirect('/user/events/');
-// 					res.sendStatus(200);
-// 				}
-// 			}
-// 		})
-// 	})
-
-// })
-
-
-// //5--- get userIDs to invite
-// router.get('/event/addInvitations', function(req, res, next) {
-// 	//connect to single connection
-// 	console.log("addInvitations");
-
-// 	let userIDs = req.session.userIDs;
-// 	console.log("userIDs: " + userIDs[0]);
-// 	//set up query
-// 	var query = "INSERT INTO invitations (eventID, guestID) VALUES (?,?);";
-
-// 	for (let i = 0; i < userIDs.length; i++) {
-// 		req.pool.getConnection(function(error, connection) {
-// 			if (error) {
-// 				console.log("2: connection error");
-// 				res.sendStatus(500);
-// 				return;
-// 			}
-// 			//run request
-// 			connection.query(query, [req.session.eventID,userIDs[i]], function(error, rows, fields) {
-// 				connection.release();
-// 				if (error) {
-// 					console.log("2: query error");
-// 					res.sendStatus(500);
-// 				} else {
-// 					{
-// 						console.log("2: successful");
-// 						//go to next middleware
-// 					}
-// 				}
-// 			})
-// 		})
-// 	}
-// 	res.sendStatus(200);
-// })
-
-
-// //6--CREATE AVAILABLITY
-// router.get('/event/addAvails', function(req, res, next) {
-// 	//connect to single connection
-// 	req.pool.getConnection(function(error, connection) {
-// 		if (error) {
-// 			console.log("connection error");
-// 			console.log(error);
-// 			res.sendStatus(500);
-// 			return;
-// 		}
-// 		//set up query
-// 		//var query = quick.insertSelectInner("invitations", "invitationID", "times", "timeID", "availablity", "eventID");
-// 		var query = "INSERT INTO availablity (timeID, invitationID) " +
-// 			"SELECT timeID,invitationID FROM times INNER JOIN invitations ON times.eventID = invitations.eventID " +
-// 			"WHERE times.eventID = " + req.session.eventID + ";";
-
-// 		//run request
-// 		connection.query(query, function(error, rows, fields) {
-// 			connection.release();
-// 			if (error) {
-// 				console.log("query error");
-// 				console.log(error);
-// 				res.sendStatus(500);
-// 			} else {
-// 				{
-// 					console.log("success");
-// 					//go to next middleware
-// 					location.assign('/user/events/');
-// 					res.sendStatus(200);
-// 				}
-// 			}
-// 		})
-// 	})
-
-// })
-
-// //5---PAIR UP USERIDS WITH THE EVENTID
-// router.use('/event/addInvitations', function(req,res,next)
-// {
-// 	console.log("3: PAIR UP USERIDS WITH THE EVENTID");
-// 	try
-// 	{
-// 		req.session.invitePairs = misc.pairs(req.session.inviteID, req.session.eventID);
-// 	} catch(error)
-// 	{
-// 		console.log("3: PAIR ERROR??");
-// 		res.sendStatus(500);
-// 		return;
-// 	}
-// 	next();
-// })
-
-// //5---CREATE INVITATIONS FROM PAIRS, RETURN WITH EVENTID
-// router.use('/event/addInvitations', function(req, res, next) {
-// 	console.log("4: actually create the invitations now LMAO");
-// 	//connect to single connection
-// 	req.pool.getConnection(function(error, connection) {
-// 		if (error) {
-// 			console.log("4: connection error");
-// 			console.log(error);
-// 			res.sendStatus(500);
-// 			return;
-// 		}
-// 		//set up query
-// 		var query = quick.insert("invitations", "(eventID, userID)", '?');
-
-// 		//run request
-// 		connection.query(query, req.session.invitePairs, function(error, rows, fields) {
-// 			connection.release();
-// 			if (error) {
-// 				console.log("4: query error" );
-// 				console.log(error);
-// 				res.sendStatus(500);
-// 			} else {
-// 				{
-// 					res.redirect(307,'/event/addAvails');
-// 				}
-// 			}
-// 		})
-// 	})
-
-// })
 
 module.exports = router;

@@ -144,12 +144,17 @@ function selectEvent(output) {
 }
 
 function selectAllEvents() {
-	query = "SELECT * FROM events;"
+	let query = "SELECT * FROM events " +
+			"WHERE creatorID = ? " +
+			"UNION " +
+			"SELECT events.eventID AS eventID, creatorID, addressID, name, description, start, end, status FROM invitations " +
+			"INNER JOIN events ON invitations.eventID = events.eventID " +
+			"WHERE guestID = ? ORDER BY eventID ASC;";
 	return query;
 }
 
-function selectAddress(id) {
-	condition = "addressID = " + id;
+function selectAddress() {
+	condition = "addressID = ? ";
 	query = select("*", "addresses", condition);
 	return query;
 }
@@ -166,9 +171,9 @@ function selectLastEventID()
 	return query;
 }
 
-function selectEventInvitees(id)
+function selectEventInvitees()
 {
-	query = "SELECT email FROM users INNER JOIN invitations ON users.userID = invitations.guestID WHERE eventID " + " = " + id + ";";
+	query = "SELECT email FROM users INNER JOIN invitations ON users.userID = invitations.guestID WHERE eventID = ? ;";
 	return query;
 }
 
@@ -283,16 +288,46 @@ function checkIfAddressExists(street,streetAdd,suburb,postcode,state,country)
 	return query;
 }
 
-function updateAvailability()
+function updateAvailability(availability,array_length)
 {
-	let query = "UPDATE availablity SET available = true WHERE timeID = " + timeID + "AND invitationID = " + invitationID + ";"
+	//     start = '2022-08-14 12:00:00' OR start = '2022-08-14 12:30:00');
+	let query = "UPDATE availablity " +
+				"INNER JOIN times ON availablity.timeID = times.timeID " +
+				"INNER JOIN invitations ON availablity.invitationID = invitations.invitationID " +
+				"SET available = " + availability + " " +
+				"WHERE guestID = ? AND ";
+	for (let i = 0; i < array_length; i++) {
+		if (i === 0)
+		{
+			query = query + "( start = ? OR ";
+		} else if (i === array_length - 1) {
+			query = query + "start = ? );";
+		} else {
+			query = query + "start = ? OR ";
+		}
+	}
 	return query;
 }
 
-function countTotalAvailableInvitees(timeID,eventID)
+function updatePlanDetails(eventId, newName, newDescription)
 {
-	query = "SELECT COUNT (available) FROM availablity INNER JOIN invitations ON availablity.invitationID = invitations.invitationID WHERE eventID = "
-			+ eventID + " AND timeID = " + timeID + ";";
+	let query = "UPDATE events SET name = \"" + newName + "\", description = \"" + newDescription + "\" ";
+	query += "WHERE eventID = " + eventId + ";";
+	return query;
+}
+
+function finaliseEvent(eventId)
+{
+	let query = "UPDATE events SET status = \"event\" WHERE eventID = " + eventId + ";";
+	return query;
+}
+
+
+function countTotalAvailableInvitees()
+{
+	query = "SELECT COUNT (available) FROM availablity " +
+			"INNER JOIN invitations ON availablity.invitationID = invitations.invitationID " +
+			"WHERE eventID = ? AND timeID = ?;";
 	return query;
 }
 
@@ -324,5 +359,7 @@ module.exports = {
 	//other
 	checkIfAddressExists,
 	updateAvailability,
+	updatePlanDetails,
+	finaliseEvent,
 	countTotalAvailableInvitees
 };

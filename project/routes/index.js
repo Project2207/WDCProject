@@ -44,30 +44,54 @@ router.get('/', function(req, res, next) {
   });
 
 //LOGGING OUT  ROUTES
-  router.get('/signOut', function(req,res,next)
+  router.get('/log_out', function(req,res,next)
   {
-		  req.session.user = null;
-		req.session.destroy(null);
-		  req.session.regenerate(function(err)
-		  {
-			  res.redirect('/logged_out');
-			  return;
-		  })
+	console.log("SERVER: log out called");
+	req.session.user = null;
+	req.session.save(function(error) {
+		if(error)
+		{
+			console.log("error" + error);
+		}
+		req.session.regenerate(function(error)
+		{
+			if(error)
+			{
+				console.log("error 2" + error);
+			}
+			res.sendStatus(200);
+		});
+	});
   })
 
+  /*
+function loggedIn (req,res,next)
+{
+	if(req.session.user)
+	{
+		next();
+	}
+	else
+	{
+		res.redirect('/logged_out');
+	}
+}
+*/
 
 //LOGGED OUT REDIRECT
-router.use('/*', function(req,res,next)
+router.get('*', function(req,res,next)
 {
+	console.log("CALLED");
 	if(!req.session.user)
 	{
 		res.redirect('/logged_out');
 	}
 	else
 	{
+		console.log("USER EXISTS");
 		next();
 	}
-})
+});
 
 //LOGGED IN ROUTES
 router.get('/user', function(req, res, next) {
@@ -107,21 +131,6 @@ router.get('/user/events', function(req, res, next) {
 
 })
 
-//     id: 8,
-//     name: "Sports Day (E)",
-//     organiser: "SherlockGnome",
-//     descr: "Have ya ever met a man with a real yardarm? Let's get together and haul some keel. That's some treasure chest you've got there. Is that a belayin' pin in yer britches, or are ye …  “I've got a jar of dirt! I've got a jar of dirt, and guess what's inside it?” “Why is the rum always gone?”",
-//     loc: "Colosseum",
-//     start: new Date("2022-05-28 09:14"),
-//     end: new Date("2022-05-28 10:31"),
-//     invitees: ["jane.doe23@gmail.com ",
-//     "sophie@gmail.com",
-//     "saschaiscool@gmail.com",
-//     "hannahiscooltoo@gmail.com",
-//     "katieiscooler@gmail.com"],
-//     finalised: true
-
-
 router.get('/user/account', function(req, res, next) {
   res.sendFile(path.resolve(__dirname + '/../public/user_account.html'));
 })
@@ -146,21 +155,37 @@ router.get('/user/create_event', function(req, res, next) {
   res.sendFile(path.resolve(__dirname + '/../public/user_create_event.html'));
 })
 
-router.get('/user/events/event/:eventId/organiser', function(req, res, next) {
+router.get('/user/event/:eventId/which', function(req, res, next) {
+	if (req.session.user == req.session.currentEventOrganiser) {
+		res.redirect('/user/event/' + req.params.eventId + '/organiser');
+	} else {
+		res.redirect('/user/event/' + req.params.eventId + '/attendee');
+	}
+})
+
+router.get('/user/event/:eventId/organiser', function(req, res, next) {
   res.sendFile(path.resolve(__dirname + '/../public/user_view_event_organiser.html'));
 })
 
-router.get('/user/events/event/:eventId/attendee', function(req, res, next) {
+router.get('/user/event/:eventId/attendee', function(req, res, next) {
   res.sendFile(path.resolve(__dirname + '/../public/attendee_view_event.html'));
 })
 
-router.get('/user/events/plan/:planId/organiser', function(req, res, next) {
+router.get('/user/plan/:planId/which', function(req, res, next) {
+	if (req.session.user == req.session.currentEventOrganiser) {
+		res.redirect('/user/plan/' + req.params.planId + '/organiser');
+	} else {
+		res.redirect('/user/plan/' + req.params.planId + '/attendee');
+	}
+})
 
+router.get('/user/plan/:planId/organiser', function(req, res, next) {
   res.sendFile(path.resolve(__dirname + '/../public/user_edit_plan_organiser.html'));
 })
 
-router.get('/user/events/plan/:planId/attendee', function(req, res, next) {
-  res.sendFile(path.resolve(__dirname + '/../public/attendee_user_plan.html'));
+router.get('/user/plan/:planId/attendee', function(req, res, next) {
+	//req.session.eventID = req.params.planId;
+	res.sendFile(path.resolve(__dirname + '/../public/attendee_user_plan.html'));
 })
 
 //ADMIN REDIRECT
@@ -220,30 +245,37 @@ router.get('/admin/users/manage_account', function(req, res, next) {
 })
 
 //DATABASE GET REQUESTS
+
+// WORKING!!
+// IF TIME: modify so that we only load events that are relavant to the
+// logged in user (i.e. invited to or organises)
 router.get('/request/getAllEvents', function(req, res, next) {
 	req.pool.getConnection(function(error,connection){
 	  if(error){
 		res.sendStatus(500);
 		return;
 	  }
-	  var query = quick.selectAllEvents();
-	  connection.query(query, function(error, rows, fields) {
+
+	  	var userID = req.session.user;
+		// console.log("getEvents userID: " + userID);
+
+		var query = quick.selectAllEvents();
+		// console.log(query);
+
+	  connection.query(query, [userID,userID], function(error, rows, fields) {
 		connection.release();
 		if (error) {
 		  res.sendStatus(418);
 		  return;
 		}
-		let response = JSON.parse(JSON.stringify(rows));
-		console.log("rows");
-		console.log(JSON.stringify(rows));
-		res.json(rows); //// HERE <-----------------------
-//		res.json(response);
+		res.json(rows);
 	  });
 	});
 });
 
-//????
+// For account info page
 router.get('/request/getUserById', function(req, res, next) {
+
 
   let query = quick.selectUser("id");
 
@@ -253,7 +285,7 @@ router.get('/request/getUserById', function(req, res, next) {
       		return;
 		}
 
-		connection.query(query, req.query.id, function(error, rows, fields)
+		connection.query(query, [req.session.user], function(error, rows, fields)
 		{
 			connection.release();
 			if(error)
@@ -281,7 +313,7 @@ router.get('/request/getUserByEmail', function(req, res, next) {
 			return;
 		}
 
-		connection.query(query, req.query.email, function(error, rows, fields)
+		connection.query(query, [req.query.email], function(error, rows, fields)
 		{
 			connection.release();
 			if(error)
@@ -306,9 +338,11 @@ router.get('/request/getEvent', function(req, res) {
 			}
 
 			//create query
-			let query = quick.selectEvent(); // Make sure that session is created
+			let eventID = req.session.currentEventId;
 
-			connection.query(query, req.session.eventID, function(error, rows, fields)
+			let query = "SELECT * FROM events INNER JOIN addresses ON events.addressID = addresses.addressID WHERE eventID = ?;";
+
+			connection.query(query, [eventID], function(error, rows, fields)
 			{
 				connection.release();
 				if(error)
@@ -321,7 +355,7 @@ router.get('/request/getEvent', function(req, res) {
 		});
 	});
 
-router.get('/request/getTimes', function(req, res) {
+router.get('/request/getTimesAndAvailabilities', function(req, res) {
 	//FIRST STEP - set up connection!
 		let pool = req.pool;
 		pool.getConnection(function(error, connection) {
@@ -330,10 +364,16 @@ router.get('/request/getTimes', function(req, res) {
 				return;
 			}
 
-			//create query
-			let query = quick.selectEventTimes(req.session.eventID); // Make sure that session is created
+			let eventID = req.session.currentEventId;
 
-			connection.query(query, function(error, rows, fields)
+			//create query
+			let query = "SELECT SUM(available) AS total_available, start FROM times " +
+						"LEFT JOIN availablity ON times.timeID = availablity.timeID " +
+						"WHERE eventID = ? " +
+						"GROUP BY times.timeID " +
+						"ORDER BY start;";
+
+			connection.query(query, [eventID], function(error, rows, fields)
 			{
 				connection.release();
 				if(error)
@@ -346,9 +386,7 @@ router.get('/request/getTimes', function(req, res) {
 		});
 	});
 
-
-
-//unfinished
+// Change so that it gets event from session
 router.get('/request/getEventInvitees', function(req, res, next) {
 		//FIRST STEP - set up connection!
 		let pool = req.pool;
@@ -358,9 +396,11 @@ router.get('/request/getEventInvitees', function(req, res, next) {
 			return;
 		  }
 
-		  let query = quick.selectEventInvitees(req.session.eventID); // Make sure session is created
+		  let eventID = req.session.currentEventId;
 
-		  connection.query(query, function(error, rows, fields)
+		  let query = quick.selectEventInvitees();
+
+		  connection.query(query, [eventID], function(error, rows, fields)
 		  {
 			  connection.release();
 			  if(error)
@@ -373,8 +413,15 @@ router.get('/request/getEventInvitees', function(req, res, next) {
 	  });
   });
 
+router.get('/request/getCurrentEventId', function(req, res, next) {
+	if (req.session.currentEventId) {
+		res.send(req.session.currentEventId.toString());
+	} else {
+		res.sendStatus(404);
+	}
+});
+
 //DATABASE POST REQUESTS
-//???
 router.post('/request/getAddress', function(req, res) {
 	//FIRST STEP - set up connection!
 	  let pool = req.pool;
@@ -385,9 +432,9 @@ router.post('/request/getAddress', function(req, res) {
 		  }
 
 		  //create query
-		  let query = quick.selectAddress(req.body.adddressID);
+		  let query = quick.selectAddress();
 
-		  connection.query(query, function(error, rows, fields)
+		  connection.query(query, [req.body.addressID], function(error, rows, fields)
 		  {
 			  connection.release();
 			  if(error)
@@ -400,38 +447,14 @@ router.post('/request/getAddress', function(req, res) {
 	  });
   });
 
-
-
-
-// Not finished
-router.post('/request/updateAvail', function(req, res, next) {
-	//FIRST STEP - set up connection!
-	  let pool = req.pool;
-	  pool.getConnection(function(error, connection) {
-		  if (error){
-			  res.send(500);
-			  return;
-		  }
-
-		  //get user details
-		  var timeID = req.body.timeID;
-		  var invitationID = req.session.invitationID; // Make sure that session is created
-		  //var available = req.body.available;
-
-		  //create query
-		  let query = quick.updateAvailability(timeID,invitationID);
-
-		  connection.query(query,[timeID,invitationID], function(error, rows, fields)
-		  {
-			  connection.release();
-			  if(error)
-			  {
-				  res.sendStatus(418);
-				  return;
-			  }
-		  });
-	  });
-  });
+//Update eventId in session info
+router.post('/request/setEventId', function(req, res) {
+	req.session.currentEventId = req.body.eventId;
+	req.session.currentEventOrganiser = req.body.organiserId;
+	console.log("currentEventOrganiser: " + req.session.currentEventOrganiser);
+	res.sendStatus(200);
+	return;
+})
 
 
 // Not finished
@@ -449,9 +472,9 @@ router.post('/request/getTotalAvailableInvitees', function(req, res, next) {
 		  var eventID = req.session.eventID; // Make sure that session is created
 
 		  //create query
-		  let query = quick.countTotalAvailableInvitees(timeID,eventID);
+		  let query = quick.countTotalAvailableInvitees();
 
-		  connection.query(query, function(error, rows, fields)
+		  connection.query(query, [timeID,eventID], function(error, rows, fields)
 		  {
 			  connection.release();
 			  if(error)
@@ -464,7 +487,93 @@ router.post('/request/getTotalAvailableInvitees', function(req, res, next) {
 	  });
   });
 
+// Move to index.js
+router.post('/request/updateAvailability', function(req, res) {
+    //FIRST STEP - set up connection!
+    var pool = req.pool;
 
+    //{avail: availability_strings, unavail: unavailability_strings}
+    var avail_array = req.body.avail;
+    var unavail_array = req.body.unavail;
+	var userID = req.session.user;
+	console.log("userID: " + userID);
 
+    // Check if there is no availability to be added
+	if (avail_array.length === 0) {
+		// Add unavailability
+		addUnavailToDatabase (req,res,userID,unavail_array);
+	} else {
+		// Add availability
+		addAvailToDatabase(req,res,userID,avail_array,unavail_array,addUnavailToDatabase);
+	}
+});
+
+function addAvailToDatabase (req,res,userID,avail_array,unavail_array,callback) {
+	//FIRST STEP - set up connection!
+    var pool = req.pool;
+	// Add availability
+	pool.getConnection(function(error, connection) {
+		if (error){
+			res.sendStatus(500);
+			return;
+		}
+
+		let query = quick.updateAvailability(1,avail_array.length);
+		// console.log(query);
+
+		let data = [userID].concat(avail_array);
+		// console.log("avail data: " + data);
+
+		connection.query(query, data, function(error, rows, fields)
+		{
+			connection.release();
+			if(error)
+			{
+				console.log("adding avail data connection error ");
+				res.sendStatus(418);
+				return;
+			} else {
+				// Check if there is no unavailability to be added
+				if (unavail_array.length === 0) {
+					res.sendStatus(200);
+				} else {
+					// Add unavilability
+					callback(req,res,userID,unavail_array);
+				}
+			}
+		});
+	});
+}
+
+function addUnavailToDatabase (req,res,userID,unavail_array) {
+	//FIRST STEP - set up connection!
+    var pool = req.pool;
+	// Add unavailability
+	pool.getConnection(function(error, connection) {
+		if (error){
+			res.sendStatus(500);
+			return;
+		}
+
+		let query = quick.updateAvailability(0,unavail_array.length);
+		// console.log(query);
+
+		let data = [userID].concat(unavail_array);
+		// console.log("unavail data: " + data);
+
+		connection.query(query, data, function(error, rows, fields)
+		{
+			connection.release();
+			if(error)
+			{
+				console.log("adding unavail data connection error ");
+				res.sendStatus(418);
+				return;
+			} else {
+				res.sendStatus(200);
+			}
+		});
+	});
+}
 
 module.exports = router;

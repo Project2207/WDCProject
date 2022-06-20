@@ -32,49 +32,56 @@
 
         <h2>Create Event</h2>
         <hr/>
+
         <div id="event-new">
+            <div v-if="event_name==''" class="text-align-center red">{{name_message}}</div>
+            <div class="text-align-center red">{{name_length_message}}</div>
             <div class="labelled-text-entry">
                 <label for="event_name" class="labelled-text-entry-label">Event Name</label>
-                <input type="text" class="labelled-text-entry-input" name="event_name" v-model="event_name"/>
+                <input type="text" class="labelled-text-entry-input" name="event_name" v-model="event_name" v-on:input="validateName" v-bind:disabled="disabled"/>
             </div>
+            <div class="text-align-center red">{{descr_message}}</div>
             <div class="labelled-text-entry">
                 <label for="event_descr" class="labelled-text-entry-label">Description</label>
-                <textarea rows="4" cols="60" class="labelled-text-entry-input" name="event_descr" v-model="event_descr"></textarea>
-                <!--<input type="text" class="labelled-text-entry-input" name="event_descr" v-model="event_descr"/>-->
+                <textarea rows="4" cols="60" class="labelled-text-entry-input" name="event_descr" v-model="event_descr" v-on:input="validateDescription" v-bind:disabled="disabled"></textarea>
             </div>
 
             <div id="address">
+                <div v-if="event_addr_street ==''" class="text-align-center red">{{location_message}}</div>
+                <div class="text-align-center red">{{location_length_message}}</div>
                 <div class="labelled-text-entry">
                     <label for="event_location" class="labelled-text-entry-label">Location</label>
-                    <input type="text" class="labelled-text-entry-input" name="event_location" placeholder="Street Address" v-model="event_addr_street"/>
+                    <input type="text" class="labelled-text-entry-input" name="event_location" placeholder="Street Address or Event Location" v-model="event_addr_street" v-on:input="validateStreet" v-bind:disabled="disabled"/>
                 </div>
                 <div class="labelled-text-entry">
                     <label for="event_location" class="labelled-text-entry-label"></label>
-                    <input type="text" class="labelled-text-entry-input" name="event_location" placeholder="Address Line 2" v-model="event_addr_street_2"/>
+                    <input type="text" class="labelled-text-entry-input" name="event_location" placeholder="Address Line 2" v-model="event_addr_street_2" v-on:input="validateStreet_2" v-bind:disabled="disabled"/>
                 </div>
                 <div class="labelled-text-entry">
                     <label for="event_location" class="labelled-text-entry-label"></label>
-                    <input type="text" class="labelled-text-entry-input-small" name="event_location" placeholder="City" v-model="event_addr_city"/>
+                    <input type="text" class="labelled-text-entry-input-small" name="event_location" placeholder="City" v-model="event_addr_city" v-on:input="validateCity" v-bind:disabled="disabled"/>
                     <span style="width: 10px;"></span>
-                    <input type="text" class="labelled-text-entry-input-small" name="event_location" placeholder="State" v-model="event_addr_state"/>
+                    <input type="text" class="labelled-text-entry-input-small" name="event_location" placeholder="State" v-model="event_addr_state" v-on:input="validateState" v-bind:disabled="disabled"/>
                 </div>
                 <div class="labelled-text-entry">
                     <label for="event_location" class="labelled-text-entry-label"></label>
-                    <input type="text" class="labelled-text-entry-input-small" name="event_location" placeholder="Post Code" v-model="event_addr_postcode"/>
+                    <input type="text" class="labelled-text-entry-input-small" name="event_location" placeholder="Post Code" v-model="event_addr_postcode" v-on:input="validatePostcode"/>
                     <span style="width: 10px;"></span>
-                    <input type="text" class="labelled-text-entry-input-small" name="event_location" placeholder="Country" v-model="event_addr_country"/>
+                    <input type="text" class="labelled-text-entry-input-small" name="event_location" placeholder="Country" v-model="event_addr_country" v-on:input="validateCountry"/>
                 </div>
             </div>
 
+            <div class="text-align-center red">{{dates_message}}</div>
             <div class="labelled-text-entry">
                 <label for="event_start_date" class="labelled-text-entry-label">Proposed Dates</label>
                 <div class="labelled-text-entry-input">
-                    <input type="date" name="event_start_date" v-model="event_start_date"/>
+                    <input type="date" name="event_start_date" v-model="event_start_date" v-on:change="validateDate" v-bind:disabled="disabled"/>
                     <i> to </i>
-                    <input type="date" name="event_end_date" v-model="event_end_date"/>
+                    <input type="date" name="event_end_date" v-model="event_end_date" v-on:change="validateDate" v-bind:disabled="disabled"/>
                 </div>
             </div>
 
+            <div class="text-align-center red">{{times_message}}</div>
             <div class="labelled-text-entry">
                 <label for="event_start_time" class="labelled-text-entry-label">Proposed Times</label>
                 <!-- <div class="labelled-text-entry-input">
@@ -83,7 +90,7 @@
                     <input type="time" name="event_end_time" v-model="event_end_time"/>
                 </div> -->
                 <div class="labelled-text-entry-input">
-                    <select name="event_start_time" v-model="event_start_time">
+                    <select name="event_start_time" v-model="event_start_time" v-on:change="validateTime" v-bind:disabled="disabled">
                         <option value="00:00">12.00 am</option>
                         <option value="00:30">12.30 am</option>
                         <option value="01:00">1.00 am</option>
@@ -134,7 +141,7 @@
                         <option value="23:30">11.30 pm</option>
                     </select>
                     <i> to </i>
-                    <select name="event_end_time" v-model="event_end_time">
+                    <select name="event_end_time" v-model="event_end_time" v-on:change="validateTime" v-bind:disabled="disabled">
                         <option value="00:00">12.00 am</option>
                         <option value="00:30">12.30 am</option>
                         <option value="01:00">1.00 am</option>
@@ -192,20 +199,23 @@
         <h2>Invite Users</h2>
         <hr/>
 
+        <div v-if="invitees.length==0" class="text-align-center red">{{invitee_message}}</div>
+        <div class="text-align-center red">{{email_message}}</div>
         <div class="labelled-text-entry">
             <label for="email" class="labelled-text-entry-label">User Email</label>
-            <input type="email" class="labelled-text-entry-input" name="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" v-model="invitee_email"/>
-            <button v-on:click="addInvitee" >Add</button>
+            <input type="email" class="labelled-text-entry-input" name="email" v-model="invitee_email" v-on:input="validateEmail" v-bind:disabled="disabled"/>
+            <button v-on:click="addInvitee" v-bind:disabled="disabled">Add</button>
         </div>
 
         <br/>
         <div class="email-row">
-            <div class="email-card" v-for="invitee in invitees">{{ invitee }}<button v-on:click="removeInvitee(invitee)">x</button></div>
+            <div class="email-card" v-for="invitee in invitees">{{ invitee }}<button v-on:click="removeInvitee(invitee)" v-bind:disabled="disabled">x</button></div>
         </div>
         <br/>
 
+        <div class="text-align-center">{{create_event_message}}</div>
         <div class="text-align-right">
-            <button class="btn-new-plan" v-on:click="onClickCreatePlan">Create Plan</button>
+            <button class="btn-new-plan" v-on:click="onClickCreatePlan" v-bind:disabled="disabled">Create Plan</button>
         </div>
     </main>
 

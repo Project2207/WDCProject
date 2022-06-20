@@ -1,69 +1,3 @@
-// // Preliminary data - link to database
-var events = [{
-    eventID: 1,
-    name: "Alice's 21th (P)",
-    creatorID: "SherlockGnome",
-    start: new Date("2022-05-28 09:14"),
-    end: new Date("2022-05-28 10:31"),
-    status: 'plan'
-},
-{
-    eventID: 2,
-    name: "Bob's 25rd (E)",
-    creatorID: "SherlockGnome",
-    start: new Date("2022-05-28 13:14"),
-    end: new Date("2022-05-28 14:31"),
-    status: 'event'
-},
-{
-    eventID: 3,
-    name: "Picnic Day (P)",
-    creatorID: "SherlockGnome",
-    start: new Date("2022-05-28 11:14"),
-    end: new Date("2022-05-28 12:31"),
-    status: 'plan'
-},
-{
-    eventID: 4,
-    name: "Sports Day (E)",
-    creatorID: "SherlockGnome",
-    start: new Date("2022-05-28 12:00"),
-    end: new Date("2022-05-28 12:31"),
-    status: 'event'
-},
-{
-    eventID: 5,
-    name: "Alice's 21th (P)",
-    creatorID: "SherlockGnome",
-    start: new Date("2022-05-28 00:00"),
-    end: new Date("2022-05-28 6:31"),
-    status: 'plan'
-},
-{
-    eventID: 6,
-    name: "Bob's 25rd (E)",
-    creatorID: "SherlockGnome",
-    start: new Date("2022-05-28 09:14"),
-    end: new Date("2022-05-28 10:31"),
-    status: 'event'
-},
-{
-    eventID: 7,
-    name: "Picnic Day (P)",
-    creatorID: "SherlockGnome",
-    start: new Date("2022-05-28 09:14"),
-    end: new Date("2022-05-28 10:31"),
-    status: 'plan'
-},
-{
-    eventID: 8,
-    name: "Sports Day (E)",
-    creatorID: "SherlockGnome",
-    start: new Date("2022-05-28 09:14"),
-    end: new Date("2022-05-28 10:31"),
-    status: 'event'
-}
-]
 
 function getEvents() {
     // Create new AJAX request
@@ -74,18 +8,9 @@ function getEvents() {
     // set Handle response
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && (this.status >= 200 && this.status <= 399)) {
-            events = JSON.parse(this.responseText); //Array of objects
-            //console.log(events);
-            //onLoadPage(events);
-            //console.log("AFTER GET EVENTS" + events);
-            //events.forEach(addEvents);
-            //console.log(events);
-
-            // events_split = splitEvents(events);
-            // all_events.plan_data = events_split.plans;
-            // all_events.event_data = events_split.events;
-            let events_split = splitEvents(events);
-            return (events_split);
+            let all_events = JSON.parse(this.responseText); //Array of objects
+            all_events.forEach(splitEvents);
+            return;
         }
     };
 
@@ -93,19 +18,27 @@ function getEvents() {
     xhttp.send();
 }
 
-function addEvents(item) {
-    event_id = item.eventID;
-    event_name = item.name;
-    event_organiser = "Organiser: " + item.creatorID;
-    event_time = "time";
-    event_date = "date";
-    // event_date = events[event].start.getDate() + " " + months[events[event].start.getMonth()] + " " + events[event].start.getFullYear() + " - " + events[event].end.getDate() + " " + months[events[event].end.getMonth()] + " " + events[event].end.getFullYear();
-    // event_time = timeIn12hrFormat(events[event].start.getHours(),events[event].start.getMinutes()) + " - " + timeIn12hrFormat(events[event].end.getHours(),events[event].end.getMinutes());
-    events.push({id: event_id, name: event_name, organiser: event_organiser, date: event_date, time: event_time});
+function getUserID() {
+    // Create new AJAX request
+    var xhttp = new XMLHttpRequest();
+    // Open connection
+    xhttp.open("GET", "/users/getUserID", true);
+
+    // set Handle response
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && (this.status >= 200 && this.status <= 399)) {
+            let userID = JSON.parse(this.responseText).userID;
+            vueinst.userID = userID;
+            return;
+        }
+    };
+
+     // Send request
+    xhttp.send();
 }
 
 
-var months = ["January","February","March","April","May","June","July","August","September","October","November","December"]
+var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 function timeIn12hrFormat(hours, minutes) {
     if (minutes == 0) {
         minutes = "00";
@@ -121,69 +54,87 @@ function timeIn12hrFormat(hours, minutes) {
     };
   }
 
-function splitEvents(events) {
-    let plan_data = [];
-    let event_data = [];
-    console.log(events[0].eventID);
-
-     for (let event = 0; event < events.length; event++) {
-        //console.log("test2");
-        event_id = events[event].eventID;
-        event_name = events[event].name;
-        event_organiser = "Organiser: " + events[event].creatorID;
-        // event_date = "test";
-        // event_time = "test2";
-        event_date = events[event].start.getDate() + " " + months[events[event].start.getMonth()] + " " + events[event].start.getFullYear() + " - " + events[event].end.getDate() + " " + months[events[event].end.getMonth()] + " " + events[event].end.getFullYear();
-        event_time = timeIn12hrFormat(events[event].start.getHours(),events[event].start.getMinutes()) + " - " + timeIn12hrFormat(events[event].end.getHours(),events[event].end.getMinutes());
-        if (events[event].status == 'event') {
-             event_data.push({id: event_id, name: event_name, organiser: event_organiser, date: event_date, time: event_time});
-        } else if (events[event].status == 'plan'){
-             plan_data.push({id: event_id, name: event_name, organiser: event_organiser, date: event_date, time: event_time});
-        }
+  function splitEvents(item) {
+    //console.log("test2");
+    event_id = item.eventID;
+    event_name = item.name;
+    event_organiser = item.creatorID;
+    event_organiser_id = item.creatorID;
+    let start = new Date(item.start);
+    let end = new Date(item.end);
+    event_start = new Date(start.toISOString().slice(0, 19).replace('T', ' '));
+    event_end = new Date(end.toISOString().slice(0, 19).replace('T', ' '));
+    event_date = event_start.getDate() + " " + months[event_start.getMonth()] + " " + event_start.getFullYear() + " - " + event_end.getDate() + " " + months[event_end.getMonth()] + " " + event_end.getFullYear();
+    event_time = timeIn12hrFormat(event_start.getHours(),event_start.getMinutes()) + " - " + timeIn12hrFormat(event_end.getHours(), event_end.getMinutes());
+    if (item.status == 'event') {
+            vueinst.event_data.push({id: event_id, name: event_name, organiser: event_organiser, organiser_id: event_organiser_id, date: event_date, time: event_time});
+    } else if (item.status == 'plan'){
+            vueinst.plan_data.push({id: event_id, name: event_name, organiser: event_organiser, organiser_id: event_organiser_id, date: event_date, time: event_time});
     }
-    return {plans: plan_data, events: event_data};
 }
 
-//events = [];
-
-let events_split = splitEvents(events);
-
-
-var all_events = new Vue({
+var vueinst = new Vue({
     el: '#vue_events',
     data: {
-        // events_split: getEvents(),
-        plan_data: events_split.plans,
-        event_data: events_split.events
-        // plan_data: events,
-        // event_data: events
+        userID: "",
+        plan_data: [],
+        event_data: [],
+
+        //Classes
+        event_card: 'event-card',
+        event_card_organiser: 'event-card-organiser',
+        flex_thirds: 'flex-thirds',
     },
 
     methods: {
-        onClickPlanCard: function (planId) {
-            //if user is organiser
-            location.assign('plan/' + planId.toString() + '/organiser');
+        onClickPlanCard: function (planId, cardIndex) {
 
-            //if user is attendee
-            //location.assign(eventId.toString() + '/attendee');
+            var xhttp = new XMLHttpRequest();
+            // console.log(this.plan_data[1].organiser);
+
+            // Open connection
+            xhttp.open("POST", "/request/setEventId", true);
+            // Set content type to JSON
+            xhttp.setRequestHeader("Content-type","application/json");
+            // Send request
+
+            let planOrganiserId = this.plan_data[cardIndex].organiser_id;
+
+            xhttp.send(JSON.stringify({eventId: planId, organiserId: planOrganiserId}));
+
+            // Handle response
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && (this.status >= 200 && this.status <= 399)) {
+                    location.assign('/user/plan/' + planId.toString() + '/which');
+                }
+            };
         },
 
-        onClickEventCard: function (eventId) {
-            //if organiser
-            location.assign('event/' + eventId.toString() + '/organiser');
+        onClickEventCard: function (currEventId, cardIndex) {
+            var xhttp = new XMLHttpRequest();
+            // console.log(this.plan_data[1].organiser);
 
-            //if attendee
-            // location.assign('event/' + eventId.toString() + '/attendee');
+            // Open connection
+            xhttp.open("POST", "/request/setEventId", true);
+            // Set content type to JSON
+            xhttp.setRequestHeader("Content-type","application/json");
+            // Send request
+
+            let eventOrganiserId = this.event_data[cardIndex].organiser_id;
+
+            xhttp.send(JSON.stringify({eventId: currEventId, organiserId: eventOrganiserId}));
+
+            // Handle response
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && (this.status >= 200 && this.status <= 399)) {
+                    location.assign('/user/event/' + currEventId.toString() + '/which');
+                }
+            };
 
         }
     },
-    // beforeMount() {
-    //     // Get Events
-    //     all_events = getEvents();
-    //     console.log("AFTER GET EVENTS" + all_events);
-    //     events_split = splitEvents(all_events);
-
-    //     this.plan_data = events_split.plans;
-    //     this.event_data = events_split.events;
-    // }
+    beforeMount() {
+        let events_split = getEvents();
+        getUserID();
+    }
   })
